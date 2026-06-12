@@ -9,6 +9,16 @@ import * as XLSX from "xlsx";
 import { Profile, Shift, LogAbsensi, JadwalKaryawan, Holiday, AttendanceRule, RekapBulanan } from "../types";
 import GeofenceMap from "./GeofenceMap";
 
+// Timezone safe helper for UTC+8 (Asia/Makassar, Singapore, Singkawang)
+const getAsiaMakassarTimeStr = (dateInput: Date | string) => {
+  const d = new Date(dateInput);
+  const utc8 = new Date(d.getTime() + (8 * 60 * 60 * 1000));
+  const h = String(utc8.getUTCHours()).padStart(2, "0");
+  const m = String(utc8.getUTCMinutes()).padStart(2, "0");
+  const s = String(utc8.getUTCSeconds()).padStart(2, "0");
+  return `${h}:${m}:${s}`;
+};
+
 interface AdminDashboardProps {
   data: {
     profiles: Profile[];
@@ -451,7 +461,7 @@ export default function AdminDashboard({
             emp.jabatan?.toLowerCase().includes("perawat")
           )) {
             // auto-detect shift for shift units
-            const inTimeStr = dateObj.toTimeString().split(" ")[0];
+            const inTimeStr = getAsiaMakassarTimeStr(dateObj);
             let minDiff = Infinity;
             let selectedShift = data.shifts[0];
             data.shifts.forEach(s => {
@@ -1627,7 +1637,7 @@ export default function AdminDashboard({
                             emp.jabatan?.toLowerCase().includes("perawat")
                           )) {
                             // Deteksi shift dinas otomatis berdasarkan kecocokan scan jam masuk terdekat
-                            const inTimeStr = dateObj.toTimeString().split(" ")[0];
+                            const inTimeStr = getAsiaMakassarTimeStr(dateObj);
                             let minDiff = Infinity;
                             let selectedShift = data.shifts[0];
                             data.shifts.forEach(s => {
