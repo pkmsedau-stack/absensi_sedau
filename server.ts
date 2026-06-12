@@ -437,14 +437,21 @@ function seedData(db: typeof defaultDb) {
   }
 }
 
+// Global in-memory cache for the database to support serverless/read-only environments like Vercel
+export let activeDb: typeof defaultDb | null = null;
+
 // Read database helper
 function readDb(): typeof defaultDb {
+  if (activeDb) {
+    return activeDb;
+  }
   try {
     if (fs.existsSync(DB_PATH)) {
       const parsed = JSON.parse(fs.readFileSync(DB_PATH, "utf-8"));
       // Ensure key items exist
       const merged = { ...defaultDb, ...parsed };
       seedData(merged);
+      activeDb = merged;
       return merged;
     }
   } catch (err) {
@@ -452,20 +459,22 @@ function readDb(): typeof defaultDb {
   }
   const memDb = { ...defaultDb };
   seedData(memDb);
+  activeDb = memDb;
   return memDb;
 }
 
 // Write database helper
 function writeDb(db: typeof defaultDb) {
+  activeDb = db;
   try {
     fs.writeFileSync(DB_PATH, JSON.stringify(db, null, 2), "utf-8");
-    if (hasSupabaseConfig) {
-      pushAllToSupabase(db).catch(err => {
-        console.error("[SUPABASE BACKGROUND SYNC ERROR]", err);
-      });
-    }
   } catch (err) {
-    console.error("Failed to write to database", err);
+    console.warn("Failed to write to database file (expected in read-only/serverless environments like Vercel):", err);
+  }
+  if (hasSupabaseConfig) {
+    pushAllToSupabase(db).catch(err => {
+      console.error("[SUPABASE BACKGROUND SYNC ERROR]", err);
+    });
   }
 }
 
@@ -670,14 +679,14 @@ processScanLogs(db);
     if (isConnected) {
       const cloudData = await pullFromSupabase();
       if (cloudData) {
+        activeDb = cloudData; // Cache to in-memory activeDb immediately
         try {
           fs.writeFileSync(DB_PATH, JSON.stringify(cloudData, null, 2), "utf-8");
           console.log("[SUPABASE INIT] Database lokal diperbarui dari Supabase Cloud!");
-          const freshDb = readDb();
-          processScanLogs(freshDb);
         } catch (err) {
-          console.error("[SUPABASE INIT ERROR] Gagal menulis data sinkronisasi:", err);
+          console.warn("[SUPABASE INIT WARNING] Gagal menulis data sinkronisasi ke disk (wajar di read-only/serverless):", err);
         }
+        processScanLogs(activeDb);
       } else {
         console.log("[SUPABASE INIT] Database Supabase kosong/baru. Mengunggah data lokal sebagai awal (seed)...");
         await pushAllToSupabase(db);
