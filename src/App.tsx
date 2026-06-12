@@ -597,24 +597,18 @@ export default function App() {
             </div>
           ) : (
             /* View B: Mobile phone UI Simulator frame centered precisely with Sleek Interface */
-            <div className="flex flex-col items-center justify-center py-4 max-w-xl mx-auto">
-              <div className="relative bg-white p-4 rounded-3xl border border-slate-200 shadow-xl w-full">
-                <span className="text-[10px] uppercase font-bold tracking-widest text-slate-400 font-mono mb-2 block text-center">DEVICE SIMULATION VIEW</span>
-                <PhoneSimulator
-                  profiles={appData.profiles}
-                  shifts={appData.shifts}
-                  schedules={appData.jadwal_karyawan}
-                  holidays={appData.holidays}
-                  logs={appData.log_absensi}
-                  onAddLog={handleAddLogMobile}
-                  onRefresh={fetchStateData}
-                  loggedInPin={loggedInUser?.pin_mesin}
-                  rules={appData.rules}
-                />
-              </div>
-              <p className="text-[11px] text-slate-400 mt-4 text-center leading-normal max-w-sm">
-                Berikut adalah simulasi tampilan menu mandiri HP Karyawan dengan fiksi GPS Geofencing & verifikasi WebRTC swafoto selfie.
-              </p>
+            <div className="flex flex-col items-center justify-center py-4 w-full max-w-sm mx-auto">
+              <PhoneSimulator
+                profiles={appData.profiles}
+                shifts={appData.shifts}
+                schedules={appData.jadwal_karyawan}
+                holidays={appData.holidays}
+                logs={appData.log_absensi}
+                onAddLog={handleAddLogMobile}
+                onRefresh={fetchStateData}
+                loggedInPin={loggedInUser?.pin_mesin}
+                rules={appData.rules}
+              />
             </div>
           )}
 
