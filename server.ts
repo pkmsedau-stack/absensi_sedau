@@ -24,6 +24,16 @@ import {
 export const app = express();
 const PORT = 3000;
 
+// Timezone safe helper for UTC+8 (Asia/Makassar, Singapore, Singkawang)
+function getUTC8TimeStr(dateInput: Date | string): string {
+  const d = new Date(dateInput);
+  const utc8 = new Date(d.getTime() + (8 * 60 * 60 * 1000));
+  const h = String(utc8.getUTCHours()).padStart(2, "0");
+  const m = String(utc8.getUTCMinutes()).padStart(2, "0");
+  const s = String(utc8.getUTCSeconds()).padStart(2, "0");
+  return `${h}:${m}:${s}`;
+}
+
 // Body parsers
 app.use(express.json({ limit: "15mb" }));
 app.use(express.text({ type: "text/*" }));
@@ -550,7 +560,7 @@ function processScanLogs(db: typeof defaultDb) {
             const inLog = dayLogs.reduce((earliest, curr) => 
               new Date(curr.waktu_scan).getTime() < new Date(earliest.waktu_scan).getTime() ? curr : earliest
             , dayLogs[0]);
-            const inTimeStr = new Date(inLog.waktu_scan).toTimeString().split(" ")[0]; // HH:MM:SS
+            const inTimeStr = getUTC8TimeStr(inLog.waktu_scan); // HH:MM:SS
             
             let minDiff = Infinity;
             let selectedShift = db.shifts[0];
@@ -615,7 +625,7 @@ function processScanLogs(db: typeof defaultDb) {
               new Date(curr.waktu_scan).getTime() > new Date(latest.waktu_scan).getTime() ? curr : latest
             , dayLogs[0]) : null;
 
-            const inTimeStr = new Date(inLog.waktu_scan).toTimeString().split(" ")[0];
+            const inTimeStr = getUTC8TimeStr(inLog.waktu_scan);
             const lateMinutes = getMinutesDiff(inTimeStr, shift.jam_masuk);
             if (lateMinutes > shift.toleransi_terlambat_menit) {
               r.total_terlambat_menit += lateMinutes;
@@ -627,7 +637,7 @@ function processScanLogs(db: typeof defaultDb) {
             }
 
             if (outLog) {
-              const outTimeStr = new Date(outLog.waktu_scan).toTimeString().split(" ")[0];
+              const outTimeStr = getUTC8TimeStr(outLog.waktu_scan);
               const earlyMinutes = getMinutesDiff(shift.jam_pulang, outTimeStr);
               if (earlyMinutes > 0) {
                 r.total_pulang_cepat_menit += earlyMinutes;
@@ -1128,8 +1138,8 @@ app.post("/api/absensi/mobile", (req, res) => {
 
   // 2. NETWORK CLOCK AUDIT: Prevent clock setting manipulation on device
   const scanDate = new Date(waktu_scan);
-  const scanHours = scanDate.getHours();
-  const scanMinutes = scanDate.getMinutes();
+  const scanHours = (scanDate.getUTCHours() + 8) % 24;
+  const scanMinutes = scanDate.getUTCMinutes();
   const scanTotalMinutes = scanHours * 60 + scanMinutes;
 
   const serverNow = new Date();
@@ -1173,8 +1183,8 @@ app.post("/api/absensi/mobile", (req, res) => {
   const dateStr = waktu_scan.split("T")[0]; // YYYY-MM-DD
   
   // Dynamic Shift Auto-Detection based on actual hour
-  const scanTimeStr = scanDate.toTimeString().split(" ")[0]; // HH:MM:SS
-  const currentHour = scanDate.getHours();
+  const scanTimeStr = getUTC8TimeStr(scanDate); // HH:MM:SS
+  const currentHour = (scanDate.getUTCHours() + 8) % 24;
 
   // Shift mappings:
   // Pagi (ID 1): 07:30:00 - 14:00:00 (Ranges: 06:00 to 12:59)
