@@ -332,9 +332,17 @@ export default function PhoneSimulator({
     setErrorMessage(null);
     setSuccessMessage(null);
 
-    const checkTime = new Date().toISOString().substring(0, 11) + new Date().toTimeString().split(" ")[0] + "+08:00";
+    const now = new Date();
+    const utc8Ms = now.getTime() + (8 * 60 * 60 * 1000);
+    const utc8Date = new Date(utc8Ms);
+    const h = String(utc8Date.getUTCHours()).padStart(2, "0");
+    const m = String(utc8Date.getUTCMinutes()).padStart(2, "0");
+    const s = String(utc8Date.getUTCSeconds()).padStart(2, "0");
+    const timeStr = `${h}:${m}:${s}`;
+
+    const checkTime = now.toISOString().substring(0, 11) + timeStr + "+08:00";
     // We can enforce today check-in date as June 12, 2026 to fit schedule database
-    const finalWaktuScan = `2026-06-12T${new Date().toTimeString().split(" ")[0]}+08:00`;
+    const finalWaktuScan = `2026-06-12T${timeStr}+08:00`;
     const sigToken = generateSecurityHash(currentEmployee.pin_mesin, finalWaktuScan);
 
     try {
