@@ -22,7 +22,7 @@ import {
 } from "./src/supabaseService.js";
 
 
-const app = express();
+export const app = express();
 const PORT = 3000;
 
 // Body parsers
@@ -1563,4 +1563,8 @@ async function startServer() {
   });
 }
 
-startServer();
+if (!process.env.VERCEL) {
+  startServer();
+}
+
+export default app;
