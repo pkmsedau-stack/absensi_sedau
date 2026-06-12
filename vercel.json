@@ -2,12 +2,12 @@
   "version": 2,
   "rewrites": [
     {
-      "source": "/api/:path*",
-      "destination": "/api"
+      "source": "/api/(.*)",
+      "destination": "/api/index.ts"
     },
     {
-      "source": "/iclock/:path*",
-      "destination": "/api"
+      "source": "/iclock/(.*)",
+      "destination": "/api/index.ts"
     },
     {
       "source": "/(.*)",
