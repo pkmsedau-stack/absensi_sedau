@@ -1,0 +1,6 @@
+{
+  "name": "Sistem Presensi UPT Puskesmas Sedau",
+  "description": "Sistem Presensi Terpadu UPT Puskesmas Sedau dengan integrasi mesin ADMS Solution X601 dan pelacakan mobile presensi karyawan.",
+  "requestFramePermissions": ["camera", "geolocation"],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
