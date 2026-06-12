@@ -6,12 +6,20 @@ dotenv.config();
 const SUPABASE_URL = process.env.SUPABASE_URL || "";
 const SUPABASE_ANON_KEY = process.env.SUPABASE_ANON_KEY || "";
 
-// Check if credentials are set
-export const hasSupabaseConfig = !!(SUPABASE_URL && SUPABASE_ANON_KEY);
+// Check if credentials are set and valid URLs
+export const supabaseClient = (() => {
+  if (!SUPABASE_URL || !SUPABASE_ANON_KEY) return null;
+  try {
+    // Validate that SUPABASE_URL looks like a valid absolute URL
+    new URL(SUPABASE_URL);
+    return createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  } catch (err) {
+    console.warn("[SUPABASE INITIALIZATION ERROR] URL atau Anon Key Supabase salah/tidak didukung:", err);
+    return null;
+  }
+})();
 
-export const supabaseClient = hasSupabaseConfig
-  ? createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
-  : null;
+export const hasSupabaseConfig = !!supabaseClient;
 
 // Global live state markers
 export let supabaseConnected = false;
